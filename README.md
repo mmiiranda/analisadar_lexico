@@ -1,0 +1,1 @@
+# analisadar_lexico
