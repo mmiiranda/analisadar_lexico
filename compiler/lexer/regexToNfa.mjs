@@ -78,6 +78,7 @@ class NFA {
     });
   }
 
+  //pego 
   getVertex(state, symbol) {
     return this.dictionaryTransitions.get(`${state},${symbol}`);
   }
@@ -89,6 +90,7 @@ class NFA {
 
     // Usando uma abordagem de busca em profundidade para achar o fechamento epsilon
     const internalEclosure = (node) => {
+      //´pergunto se o nó já foi visitado
       if (visited[node]) return;
 
       result.add(node);
@@ -111,6 +113,7 @@ class NFA {
       internalEclosure(node);
     });
 
+    //retorno o resultado já ordenao pra não haver problemas
     return [...result].sort((a, b) => a - b);
   }
 
@@ -358,5 +361,6 @@ function regexNfa(regex) {
       }
     }
   }
+  //retorno o nfa geral que está no topo da pilha
   return operands.pop();
 }
