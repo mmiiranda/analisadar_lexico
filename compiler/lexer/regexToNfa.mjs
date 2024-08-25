@@ -1,4 +1,6 @@
+import { Transform } from "stream";
 import { balanceRegex } from "./BalanceRegex.mjs";
+import { stat } from "fs";
 
 export function regexToNfa(tokens) {
   const balancedRegexs = [];
@@ -8,7 +10,6 @@ export function regexToNfa(tokens) {
     balancedRegexs.push(balanceRegex(tokens[key]));
   }
 
-  console.log(balancedRegexs);
   //convertendo cada expressão regular em NFA
   const nfas = balancedRegexs.map((regex) => regexNfa(regex));
 
@@ -18,11 +19,15 @@ export function regexToNfa(tokens) {
   // Exibe o NFA resultante
   unionNfa.display();
 
-  regexNfa("((a|b).c)").display();
+  const nfa = regexNfa("((a|b).c)*");
+  nfa.createDictionary();
+  nfa.display();
   // unionNfa.display();
 
+  unionNfa.createDictionary();
+
   //retorno o nfa que representa a linguagem dos tokens
-  return unionNfa;
+  return nfa;
 }
 
 //criando uma classe que representa uma transição
@@ -40,6 +45,73 @@ class NFA {
     this.vertex = [];
     this.transitions = [];
     this.final_state = 0;
+    this.dictionaryTransitions = new Map();
+  }
+
+  //pego todos os simbolos que um determinado conjunto de estados pode ler
+  findSymbolsForStates(states) {
+    const result = new Set();
+    states.forEach((state) => {
+      this.transitions.forEach((transition) => {
+        if (
+          state === transition.vertex_from &&
+          transition.trans_symbol !== "^"
+        ) {
+          result.add(transition.trans_symbol);
+        }
+      });
+    });
+    return result;
+  }
+
+  //crio um dicionário para simplificar o tratamento futuro do dfa
+  createDictionary() {
+    this.transitions.forEach((transition) => {
+      const key = `${transition.vertex_from},${transition.trans_symbol}`;
+      if (this.dictionaryTransitions.has(key)) {
+        this.dictionaryTransitions.get(key).add(transition.vertex_to);
+      } else {
+        const newSet = new Set();
+        newSet.add(transition.vertex_to);
+        this.dictionaryTransitions.set(key, newSet);
+      }
+    });
+  }
+
+  getVertex(state, symbol) {
+    return this.dictionaryTransitions.get(`${state},${symbol}`);
+  }
+
+  //eclosure que me retorna o conjunto de estados alcançados com transição epsilon
+  eclosure(X) {
+    const result = new Set();
+    const visited = new Array(this.getVertexCount()).fill(false);
+
+    // Usando uma abordagem de busca em profundidade para achar o fechamento epsilon
+    const internalEclosure = (node) => {
+      if (visited[node]) return;
+
+      result.add(node);
+      visited[node] = true;
+
+      this.transitions.forEach((transition) => {
+        if (
+          node === transition.vertex_from &&
+          transition.trans_symbol === "^"
+        ) {
+          const y = transition.vertex_to;
+          if (!visited[y]) {
+            internalEclosure(y);
+          }
+        }
+      });
+    };
+
+    X.forEach((node) => {
+      internalEclosure(node);
+    });
+
+    return [...result].sort((a, b) => a - b);
   }
 
   //retorna a quantidade de vertices
@@ -218,7 +290,7 @@ function regexNfa(regex) {
   for (let i = 0; i < regex.length; i++) {
     let currentSybol = regex[i];
 
-    //tratando operadores escopados
+    //tratando operadores escapados
     // se eu achar um \ alguma coisa, eu faço um automato pra essa alguma coisa e seto
     if (currentSybol === "\\") {
       i++;

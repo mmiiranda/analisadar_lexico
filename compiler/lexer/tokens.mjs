@@ -5,7 +5,7 @@ function TokenAndRegularExpressionsDefinition() {
   const letters = alphabet + alphabet.toUpperCase();
   const alphanumeric = letters + digits + "_";
 
-  //EXPRESSÃO: [a-zA-Z_][a-zA-Z0-9_]
+  //EXPRESSÃO: [a-zA-Z_][a-zA-Z0-9_]*
   const varRegex = `(${letters.split("").concat("_").join("|")}).(${alphanumeric
     .split("")
     .join("|")})*`;
@@ -14,11 +14,13 @@ function TokenAndRegularExpressionsDefinition() {
     .split("")
     .join("|")})*`;
   //EXPRESSÃO: "[a-zA-Z0-9!#~"]"
-  const constRegex = `"(${alphanumeric
+  const constRegex = `((".(${alphanumeric
     .split("")
-    .concat(" ", "!", "#", ..."~")
+    .concat("!", "#", ..."~")
     .filter((c) => c !== '"')
-    .join("|")}"`;
+    .join("|")})).")`;
+
+  console.log(constRegex);
 
   const eqRegex = `=`;
   const addRegex = `+`;
