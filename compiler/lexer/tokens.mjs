@@ -16,9 +16,11 @@ function TokenAndRegularExpressionsDefinition() {
   //EXPRESSÃO: (".([a-zA-Z0-9!#~"]*).")
   const constRegex = `".(${alphanumeric
     .split("")
-    .concat("!", "#", ..."~")
+    .concat("!", "#", "\\s", "\\*", "?", "+", "-", "=", "@", ..."~")
     .filter((c) => c !== '"')
     .join("|")})*."`;
+
+  let blank = "(\\s|\\r||\\n|\\t||\\v)";
 
   console.log(constRegex);
 
@@ -47,6 +49,7 @@ function TokenAndRegularExpressionsDefinition() {
     SEMICOLON: semicolonRegex,
     INT: intRegex,
     STRING: stringRegex,
+    BLANK: blank,
   };
 }
 
