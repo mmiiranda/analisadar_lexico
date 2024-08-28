@@ -5,19 +5,25 @@ import { stat } from "fs";
 export function regexToNfa(tokens) {
   const balancedRegexs = [];
 
+  const mappedTokens = new Map();
+
   //percorro todos os tokens e faço um balanceamento de parenteses neles (se precisar)
+  let i = 0;
   for (let key in tokens) {
     balancedRegexs.push(balanceRegex(tokens[key]));
+    mappedTokens.set(i, key);
+    i++;
   }
+  // console.log(balancedRegexs[0]);
 
   //convertendo cada expressão regular em NFA
   const nfas = balancedRegexs.map((regex) => regexNfa(regex));
 
   // Unir todos os NFAs em um único NFA usando a função union
-  const unionNfa = union(nfas, nfas.length);
+  const unionNfa = unionNfas(nfas, nfas.length, mappedTokens);
 
   // Exibe o NFA resultante
-  unionNfa.display();
+  // unionNfa.display();
 
   const nfa = regexNfa("((a|b).c)*");
   nfa.createDictionary();
@@ -27,7 +33,45 @@ export function regexToNfa(tokens) {
   unionNfa.createDictionary();
 
   //retorno o nfa que representa a linguagem dos tokens
-  return nfa;
+  return unionNfa;
+}
+
+function unionNfas(selections, quantityOperands, mappedTokens) {
+  //criação do meu novo nfa
+  const result = new NFA();
+  //total de vertives = 2 novos vertices + todos os vertices dos outros nfas
+  let vertexCount = 1;
+  for (let i = 0; i < quantityOperands; i++) {
+    vertexCount += selections[i].getVertexCount();
+  }
+
+  //setando a quantidade total de vertices no meu automato resultante
+  result.setVertex(vertexCount);
+
+  //variavel que vai me ajudar a definir as labels do meu novo automato
+  let adderTrack = 1;
+
+  //fazendo com que o novo estado do começo aponte para todos os automatos e todos os automatos passam a apontar pro novo estado final
+  console.log("quantidade de operandos: ");
+  for (let i = 0; i < quantityOperands; i++) {
+    result.setTransition(0, adderTrack, "^");
+    const med = selections[i];
+    med.transitions.forEach((transition) =>
+      result.setTransition(
+        transition.vertex_from + adderTrack,
+        transition.vertex_to + adderTrack,
+        transition.trans_symbol
+      )
+    );
+    adderTrack += med.getVertexCount();
+    result.final_states.set(adderTrack - 1, mappedTokens.get(i));
+  }
+
+  console.log("ESSE é o tamanho: " + mappedTokens.get(0));
+  result.final_states.forEach((key, value) => {
+    console.log(key, value);
+  });
+  return result;
 }
 
 //criando uma classe que representa uma transição
@@ -38,13 +82,12 @@ class Transition {
     this.trans_symbol = trans_symbol;
   }
 }
-
-//classe que representa um NFA
 class NFA {
   constructor() {
     this.vertex = [];
     this.transitions = [];
     this.final_state = 0;
+    this.final_states = new Map();
     this.dictionaryTransitions = new Map();
   }
 
@@ -78,7 +121,7 @@ class NFA {
     });
   }
 
-  //pego 
+  //pego
   getVertex(state, symbol) {
     return this.dictionaryTransitions.get(`${state},${symbol}`);
   }
@@ -160,6 +203,8 @@ class NFA {
     console.log(this.getFinalState());
   }
 }
+
+//classe que representa um NFA
 
 //função que recebe dois NFAS e faz a concatenação dos dois (NFA1) ^-> (NFA2)
 function concat(NFA1, NFA2) {
