@@ -22,8 +22,6 @@ function TokenAndRegularExpressionsDefinition() {
 
   let blank = "(\\s|\\r||\\n|\\t||\\v)";
 
-  console.log(constRegex);
-
   const eqRegex = `=`;
   const addRegex = `+`;
   const subRegex = `-`;
@@ -52,21 +50,5 @@ function TokenAndRegularExpressionsDefinition() {
     BLANK: blank,
   };
 }
-
-// definição dos tokens
-export const TOKENLIST = {
-  INT: "INT",
-  STRING: "STRING",
-  VAR: "VAR",
-  NUM: "NUM",
-  CONST: "STRING",
-  EQ: "EQ",
-  ADD: "ADD",
-  SUB: "SUB",
-  MUL: "MUL",
-  GT: "GT",
-  LT: "LT",
-  SEMICOLON: "SEMICOLON",
-};
 
 export default TokenAndRegularExpressionsDefinition();

@@ -126,8 +126,5 @@ function nfaToDfaParser(nfa) {
 
 export function nfaToDfa(nfa) {
   const dfa = nfaToDfaParser(nfa);
-  console.log(dfa.recognize(`"10 * 10"`));
-  // dfa.display();
-
   return dfa;
 }

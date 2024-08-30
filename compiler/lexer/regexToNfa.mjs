@@ -14,7 +14,6 @@ export function regexToNfa(tokens) {
     mappedTokens.set(i, key);
     i++;
   }
-  // console.log(balancedRegexs[0]);
 
   //convertendo cada expressão regular em NFA
   const nfas = balancedRegexs.map((regex) => regexNfa(regex));
@@ -22,12 +21,6 @@ export function regexToNfa(tokens) {
   // Unir todos os NFAs em um único NFA usando a função union
   const unionNfa = unionNfas(nfas, nfas.length, mappedTokens);
 
-  // Exibe o NFA resultante
-  // unionNfa.display();
-
-  const nfa = regexNfa("((a|b).c)*");
-  nfa.createDictionary();
-  nfa.display();
   // unionNfa.display();
 
   unionNfa.createDictionary();
@@ -52,7 +45,6 @@ function unionNfas(selections, quantityOperands, mappedTokens) {
   let adderTrack = 1;
 
   //fazendo com que o novo estado do começo aponte para todos os automatos e todos os automatos passam a apontar pro novo estado final
-  console.log("quantidade de operandos: ");
   for (let i = 0; i < quantityOperands; i++) {
     result.setTransition(0, adderTrack, "^");
     const med = selections[i];
@@ -66,11 +58,6 @@ function unionNfas(selections, quantityOperands, mappedTokens) {
     adderTrack += med.getVertexCount();
     result.final_states.set(adderTrack - 1, mappedTokens.get(i));
   }
-
-  console.log("ESSE é o tamanho: " + mappedTokens.get(0));
-  result.final_states.forEach((key, value) => {
-    console.log(key, value);
-  });
   return result;
 }
 

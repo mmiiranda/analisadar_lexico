@@ -12,4 +12,11 @@ const dfa = nfaToDfa(nfa);
 //resultado da análise léxica
 
 const result = lex(sourceCode, dfa);
-console.log(result);
+let finalText = "";
+result.forEach(element => {
+    finalText += element;
+    if(element == "SEMICOLON") finalText += "\n";
+    else
+    finalText += " ";
+});
+console.log(finalText);
