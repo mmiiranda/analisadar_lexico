@@ -39,7 +39,7 @@ class DFA {
         }
       } else {
         // Se não há transição para o símbolo, a palavra não é reconhecida
-        return "ERROR: Invalid input";
+        throw new Error("ERROR: Invalid input");
       }
     }
 
@@ -47,8 +47,108 @@ class DFA {
     if (lastAcceptingStates.length > 0) {
       return lastAcceptingStates.join(", ") || "UNKNOWN TOKEN";
     } else {
-      return "ERROR: Not an accepting state";
+      throw new Error("ERROR: Not an accepting state");
     }
+  }
+  tokenizeExpression(expression) {
+    const tokens = [];
+    let currentToken = "";
+    let insideQuotes = false;
+
+    for (const character of expression) {
+      switch (character) {
+        case '"':
+          if (insideQuotes) {
+            currentToken += character;
+            tokens.push(currentToken);
+            insideQuotes = false;
+            currentToken = "";
+          } else {
+            insideQuotes = true;
+            currentToken += character;
+          }
+          break;
+
+        case ";":
+          if (currentToken) {
+            tokens.push(currentToken);
+          }
+          tokens.push(character);
+          currentToken = "";
+          break;
+
+        case "\n":
+          if (insideQuotes) {
+            currentToken += character;
+          } else {
+            if (currentToken) {
+              tokens.push(currentToken);
+              currentToken = "";
+            }
+          }
+          break;
+
+        case " ":
+          if (insideQuotes) {
+            currentToken += character;
+          } else if (currentToken) {
+            tokens.push(currentToken);
+            currentToken = "";
+          }
+          break;
+
+        default:
+          currentToken += character;
+      }
+    }
+
+    // Adiciona qualquer token restante após o loop
+    if (currentToken) {
+      tokens.push(currentToken);
+    }
+
+    return tokens;
+  }
+
+  checkLanguage(expression) {
+    const tokenizedList = this.tokenizeExpression(expression);
+    let tokens = [];
+
+    try {
+      for (const lexeme of tokenizedList) {
+        const result = this.recognize(lexeme);
+        if (result.includes("INT")) {
+          tokens.push("INT");
+        } else if (result.includes("STRING")) {
+          tokens.push("STRING");
+        } else if (result.includes("VAR")) {
+          tokens.push("VAR");
+        } else if (result.includes("CONST")) {
+          tokens.push("CONST");
+        } else if (result.includes("NUM")) {
+          tokens.push("NUM");
+        } else if (result.includes("EQ")) {
+          tokens.push("EQ");
+        } else if (result.includes("ADD")) {
+          tokens.push("ADD");
+        } else if (result.includes("SUB")) {
+          tokens.push("SUB");
+        } else if (result.includes("MUL")) {
+          tokens.push("MUL");
+        } else if (result.includes("GT")) {
+          tokens.push("GT");
+        } else if (result.includes("LT")) {
+          tokens.push("LT");
+        } else if (result.includes("SEMICOLON")) {
+          tokens.push("SEMICOLON");
+        } else {
+          tokens.push("UNKNOWN TOKEN");
+        }
+      }
+    } catch (error) {
+      tokens = "ERROR";
+    }
+    return tokens;
   }
 }
 
@@ -124,7 +224,7 @@ function nfaToDfaParser(nfa) {
   );
 }
 
-export function nfaToDfa(nfa) {
+export function nfaToDfa(nfa, language) {
   const dfa = nfaToDfaParser(nfa);
-  return dfa;
+  return dfa.checkLanguage(language);
 }
